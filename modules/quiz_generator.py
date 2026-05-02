@@ -4,7 +4,7 @@ import json
 
 logger = logging.getLogger(__name__)
 
-def generate_quiz(text):
+def generate_quiz(text, api_key=None):
     logger.info("Generating standard quiz...")
     prompt = f"""
     You are an expert educator.
@@ -52,12 +52,12 @@ def generate_quiz(text):
     }}
     """
 
-    result = call_llm(prompt)
+    result = call_llm(prompt, api_key=api_key)
     if result is None:
         logger.error("LLM failed to generate standard quiz.")
     return result
 
-def generate_fusion_quiz(chunks):
+def generate_fusion_quiz(chunks, api_key=None):
     logger.info("Generating fusion quiz...")
     prompt = f"""
     You are an expert educator.
@@ -111,12 +111,12 @@ def generate_fusion_quiz(chunks):
     }}
     """
 
-    result = call_llm(prompt)
+    result = call_llm(prompt, api_key=api_key)
     if result is None:
         logger.error("LLM failed to generate fusion quiz.")
     return result
 
-def generate_explanation(question, user_choice, correct_choice, concept):
+def generate_explanation(question, user_choice, correct_choice, concept, api_key=None):
     logger.info("Generating explanation for wrong answer...")
     prompt = f"""
     A student answered a multiple choice question incorrectly. 
@@ -129,13 +129,13 @@ def generate_explanation(question, user_choice, correct_choice, concept):
 
     Provide a brief, encouraging paragraph (max 3 sentences).
     """
-    result = call_llm(prompt, temperature=0.3)
+    result = call_llm(prompt, api_key=api_key, temperature=0.3)
     if result is None:
         logger.error("LLM failed to generate explanation.")
         return "Explanation could not be generated at this time."
     return result
 
-def generate_redemption_questions(weak_concepts):
+def generate_redemption_questions(weak_concepts, api_key=None):
     logger.info("Generating redemption questions...")
     concepts_str = ", ".join(weak_concepts)
     prompt = f"""
@@ -156,7 +156,7 @@ def generate_redemption_questions(weak_concepts):
       ]
     }}
     """
-    result = call_llm(prompt, temperature=0.7)
+    result = call_llm(prompt, api_key=api_key, temperature=0.7)
     if result is None:
         logger.error("LLM failed to generate redemption questions.")
     return result

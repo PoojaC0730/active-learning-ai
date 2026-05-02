@@ -65,13 +65,23 @@ def reset_quiz_state(quiz):
     st.session_state.redemption_submitted = False
     st.session_state.redemption_results = []
 
+# --- Sidebar Configuration ---
+with st.sidebar:
+    st.header("⚙️ Configuration")
+    user_api_key = st.text_input("Enter your Groq API Key:", type="password", help="Get your free API key at console.groq.com")
+    if not user_api_key:
+        st.warning("Please enter your Groq API Key to proceed.")
+    st.markdown("---")
+
 # --- Tab 1: Single Text ---
 with tab1:
     text = st.text_area("Enter subject matter or study content:", height=200)
     if st.button("Generate Adaptive Quiz", use_container_width=True):
-        if text.strip():
+        if not user_api_key:
+            st.error("Please enter your Groq API key in the sidebar first.")
+        elif text.strip():
             with st.spinner("Analyzing text and calibrating cognitive difficulties..."):
-                raw = generate_quiz(text)
+                raw = generate_quiz(text, api_key=user_api_key)
                 if raw is None:
                     st.error("Failed to connect to AI service.")
                 else:
@@ -88,12 +98,14 @@ with tab1:
 with tab2:
     uploaded_files = st.file_uploader("Upload Topic PDFs", accept_multiple_files=True, type=["pdf"])
     if st.button("Generate Fusion Adaptive Quiz", use_container_width=True):
-        if uploaded_files:
+        if not user_api_key:
+            st.error("Please enter your Groq API key in the sidebar first.")
+        elif uploaded_files:
             with st.spinner("Extracting content and fusing core concepts..."):
                 all_text = extract_all(uploaded_files)
                 if all_text.strip():
                     chunks = list(chunk_text(all_text, 400))
-                    raw = generate_fusion_quiz(chunks)
+                    raw = generate_fusion_quiz(chunks, api_key=user_api_key)
                     if raw is None:
                         st.error("Failed to connect to AI service.")
                     else:
@@ -190,7 +202,7 @@ if st.session_state.quiz:
                             # Explainability Layer
                             explanation = ""
                             if not is_correct:
-                                explanation = generate_explanation(q["question"], user_choice, q["answer"], concept)
+                                explanation = generate_explanation(q["question"], user_choice, q["answer"], concept, api_key=user_api_key)
                             
                             feedback_details.append({
                                 "question": q["question"],
@@ -238,7 +250,7 @@ if st.session_state.quiz:
                         st.info("You completed the main quiz, but there are a few areas we should review.")
                         if st.button("Start Redemption Round", type="primary"):
                             with st.spinner("Generating targeted short-answer questions..."):
-                                raw_redemption = generate_redemption_questions(list(st.session_state.missed_concepts))
+                                raw_redemption = generate_redemption_questions(list(st.session_state.missed_concepts), api_key=user_api_key)
                                 parsed = parse_json(raw_redemption)
                                 if parsed and "questions" in parsed:
                                     st.session_state.redemption_questions = parsed["questions"]
@@ -283,7 +295,7 @@ if st.session_state.quiz:
                     results = []
                     for i, q in enumerate(st.session_state.redemption_questions):
                         user_ans = st.session_state.get(f"redemption_ans_{i}", "")
-                        eval_raw = evaluate_short_answer(q["question"], q["correct_answer"], user_ans)
+                        eval_raw = evaluate_short_answer(q["question"], q["correct_answer"], user_ans, api_key=user_api_key)
                         eval_parsed = parse_json(eval_raw)
                         
                         if eval_parsed:

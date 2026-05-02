@@ -6,10 +6,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 logger = logging.getLogger(__name__)
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-def call_llm(prompt, temperature=0.7):
+def call_llm(prompt, api_key=None, temperature=0.7):
+    key = api_key or os.getenv("GROQ_API_KEY")
+    if not key:
+        logger.error("No Groq API Key provided.")
+        return None
+
     try:
+        client = Groq(api_key=key)
         logger.info("Sending request to LLM...")
         response = client.chat.completions.create(
             model="openai/gpt-oss-20b",

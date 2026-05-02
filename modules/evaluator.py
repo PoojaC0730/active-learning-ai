@@ -3,7 +3,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def evaluate_short_answer(question, correct_answer, user_answer):
+def evaluate_short_answer(question, correct_answer, user_answer, api_key=None):
     logger.info("Evaluating short answer...")
     prompt = f"""
     Evaluate the student's short answer semantically.
@@ -22,7 +22,7 @@ def evaluate_short_answer(question, correct_answer, user_answer):
     }}
     """
 
-    result = call_llm(prompt, temperature=0)
+    result = call_llm(prompt, api_key=api_key, temperature=0)
     if result is None:
         logger.error("Failed to generate evaluation from LLM.")
     return result
